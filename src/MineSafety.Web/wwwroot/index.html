@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>矿车平台 V4 · 今日首页与查询报表</title>
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark" aria-hidden="true"></span><span class="brand-main">魏家峁矿生产管控平台</span><span class="brand-divider"></span><span class="brand-section">监测端</span><span class="brand-divider"></span><span class="brand-section">矿车载运安全监测系统</span></div>
+    <div class="top-right"><span class="preview-tag">本地数据 · 只读查询</span><span>魏家峁露天矿</span><i></i><button class="account-button" id="account-menu" type="button" aria-expanded="false">账号 ▾</button><div id="account-dropdown" hidden><span id="account-name"></span><button id="logout" type="button">退出登录</button></div><i></i><time id="clock"></time></div>
+  </header>
+  <div class="shell">
+    <aside><nav aria-label="主菜单">
+      <button class="item active" type="button" data-page="home"><span class="icon">⌂</span>首页</button>
+      <button class="item" type="button" data-page="query"><span class="icon">▰</span>查询与报表</button>
+      <button class="item" type="button" data-page="device"><span class="icon">▣</span>设备状态</button>
+      <button class="item" type="button" data-page="config"><span class="icon">⚙</span>配置管理</button>
+      <button class="item" type="button" data-page="users"><span class="icon">♙</span>用户管理</button>
+      <button class="item" type="button" data-page="email"><span class="icon">＠</span>邮箱管理</button>
+    </nav></aside>
+    <main>
+
+    <section class="page active" id="page-home">
+      <h1>监控首页</h1>
+      <div class="home-date"><span id="home-day"></span><span id="home-updated"></span></div>
+      <section class="cards" aria-label="今日概况">
+        <div class="card"><div class="label">今日过车</div><strong id="home-total">—</strong></div>
+        <div class="card online"><div class="label">有效测量</div><strong id="home-valid">—</strong></div>
+        <div class="card alert"><div class="label">无效测量</div><strong id="home-invalid">—</strong></div>
+        <div class="card review"><div class="label">有效体积（m³）</div><strong id="home-volume">—</strong></div>
+      </section>
+      <div class="section-card"><div class="section-head"><h2>今日最近过车</h2><span class="muted">最近 5 条 · 完整检索与操作请进入“查询与报表”</span></div>
+        <table class="new-table home-table"><colgroup><col style="width:27%"><col style="width:18%"><col style="width:18%"><col style="width:22%"><col style="width:15%"></colgroup><thead><tr><th>通过时间</th><th>车辆编号／名称</th><th>测量结果</th><th>RTK 匹配</th><th>体积估算（m³）</th></tr></thead><tbody id="home-records"></tbody></table>
+        <div class="page-footer"><span>首页每 5 秒刷新 · 仅统计 RTK_LIDAR 已入库记录</span><span>无效结果不计入体积合计</span></div>
+      </div>
+    </section>
+
+    <section class="page" id="page-query">
+      <h1>车辆查询与统计报表</h1>
+      <p class="page-intro">选择时间与车辆条件，查询已入库的 RTK 双雷达测量结果；统计、分页、详情与导出使用同一次查询结果。</p>
+      <div class="section-card"><div class="section-head"><h2>查询条件</h2><button class="button primary" id="export-open" type="button" disabled>导出报表</button></div><div class="section-body">
+        <form id="merged-query-form" novalidate>
+          <div class="query-form">
+            <div class="time-presets wide" role="group" aria-label="时间快捷选择"><span class="filter-label">时间范围</span><button class="active" type="button" data-preset="day">今日</button><button type="button" data-preset="week">本周</button><button type="button" data-preset="month">本月</button><button type="button" data-preset="custom">自定义</button></div>
+            <label for="query-start">开始时间 <span class="required">必填</span><input id="query-start" type="datetime-local" required></label>
+            <label for="query-end">结束时间 <span class="required">必填</span><input id="query-end" type="datetime-local" required></label>
+            <label for="query-vehicle">车辆编号／名称 <span class="muted">选填，不填写则统计全部车辆</span><input id="query-vehicle" type="text" placeholder="支持编号、记录时名称或当前名称查询" autocomplete="off"></label>
+            <div class="query-actions"><button class="button" id="query-reset" type="button">重置</button><button class="button primary" type="submit">查询</button></div>
+          </div>
+          <div id="query-message" class="query-message" role="status" aria-live="polite"></div>
+        </form>
+      </div></div>
+      <div class="query-empty" id="before-query"><strong>请选择时间后点击“查询”</strong><span>统计与车辆记录将在查询后显示，详细测量信息在进入详情时显示。</span></div>
+      <div id="query-results" hidden>
+        <div class="query-snapshot"><span id="snapshot-text"></span><span id="snapshot-count"></span></div>
+        <div class="report-cards query-cards"><div class="report-card"><span>过车车次</span><strong id="stat-total">—</strong></div><div class="report-card"><span>有效测量</span><strong id="stat-valid">—</strong></div><div class="report-card alert"><span>无效测量</span><strong id="stat-invalid">—</strong></div><div class="report-card volume"><span>有效体积估算（m³）</span><strong id="stat-volume">—</strong></div></div>
+        <div class="section-card"><div class="section-head"><h2>车辆记录</h2><span class="muted">通过时间倒序 · 统计包含全部匹配记录</span></div>
+          <table class="new-table"><colgroup><col style="width:22%"><col style="width:15%"><col style="width:15%"><col style="width:21%"><col style="width:14%"><col style="width:13%"></colgroup><thead><tr><th>通过时间</th><th>车辆编号／名称</th><th>测量结果</th><th>RTK 匹配</th><th>体积估算（m³）</th><th>操作</th></tr></thead><tbody id="query-records"></tbody></table>
+          <div class="page-footer"><span id="page-count"></span><div class="record-pagination"><label for="page-size">每页</label><select id="page-size"><option>10</option><option selected>20</option><option>50</option></select><button id="prev-page" type="button">上一页</button><span id="page-index"></span><button id="next-page" type="button">下一页</button></div></div>
+        </div>
+      </div>
+      <dialog id="vehicle-detail"><div class="section-head"><h2>车辆测量详情</h2><button class="button" id="detail-close" type="button">关闭</button></div><div class="dialog-body">
+        <div id="detail-title" style="font-size:18px;font-weight:700"></div>
+        <div class="detail-grid"><div><span>测量结果</span><strong id="detail-result"></strong></div><div><span>体积估算</span><strong id="detail-volume"></strong></div><div><span>RTK 匹配</span><strong id="detail-match"></strong></div><div><span>行驶速度</span><strong id="detail-speed"></strong></div></div>
+        <div class="dialog-photos"><div class="photo"><div class="photo-frame front" id="detail-front-box"><img class="source" id="detail-front" alt="车牌相机抓拍原图"><div class="missing-label">暂无照片</div></div><div class="photo-label">车牌相机抓拍原图</div></div><div class="photo"><div class="photo-frame top" id="detail-top-box"><img class="source" id="detail-top" alt="车顶抓拍"><div class="missing-label">暂无照片</div></div><div class="photo-label">车顶抓拍</div></div></div>
+        <div class="measurement-reason"><span>测量端原始原因</span><p id="detail-reason"></p></div>
+        <dl class="measurement-metadata" id="detail-metadata"></dl>
+        <p class="quiet-note">照片索引与三维预览尚未接入；无效测量不代表安全报警。网页只展示测量端结果，不修改算法判断。</p>
+      </div></dialog>
+      <dialog id="export-dialog"><div class="section-head"><h2>导出本次查询报表</h2><button class="button" id="export-close" type="button">关闭</button></div><div class="dialog-body"><div class="export-summary" id="export-scope"></div><div class="export-fields"><label for="export-grain">统计粒度</label><select id="export-grain"><option value="day">日报（按日）</option><option value="week">周报（按周）</option><option value="month">月报（按月）</option></select><label><input id="include-records" type="checkbox" checked> 附车辆记录明细</label></div><table class="new-table"><thead><tr><th>统计时间</th><th>车次</th><th>有效测量</th><th>无效测量</th><th>有效体积（m³）</th></tr></thead><tbody id="export-preview"></tbody></table><p class="quiet-note">报表范围固定为本次查询结果。明细包含车辆编号、历史名称、RTK 匹配、模板、配准指标、体积和原始原因。</p><div class="section-actions"><button class="button primary" id="export-confirm" type="button">导出 Excel</button></div></div></dialog>
+    </section>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+<section class="page" id="page-device">
+      <h1>设备状态</h1><p class="page-intro">查看两台雷达和两台矿车相机的连通、采集和数据新鲜度。</p>
+      <div class="info-strip"><div class="small-stat">设备在线<strong>— / —</strong></div><div class="small-stat">采集正常<strong>— / —</strong></div><div class="small-stat">待处理故障<strong>—</strong></div></div>
+      <div class="section-card"><div class="section-head"><h2>设备运行概况</h2><button class="button" data-demo="设备状态刷新" type="button">刷新状态</button></div><div class="section-body"><div class="device-grid">
+        <div class="device-card"><div class="device-title"><strong>矿车扫描雷达</strong><span class="status-dot unavailable">未接入</span></div><div class="device-meta"><div><span>所属链路</span><b>矿车载运监测</b></div><div><span>通信状态</span><b>未接入</b></div><div><span>最近心跳</span><b>未接入</b></div><div><span>最近数据</span><b>未接入</b></div></div></div>
+        <div class="device-card"><div class="device-title"><strong>辅助雷达</strong><span class="status-dot unavailable">未接入</span></div><div class="device-meta"><div><span>所属链路</span><b>矿车辅助测速</b></div><div><span>通信状态</span><b>未接入</b></div><div><span>最近心跳</span><b>未接入</b></div><div><span>最近数据</span><b>未接入</b></div></div></div>
+        <div class="device-card"><div class="device-title"><strong>车牌识别相机</strong><span class="status-dot unavailable">未接入</span></div><div class="device-meta"><div><span>所属链路</span><b>矿车载运监测</b></div><div><span>通信状态</span><b>未接入</b></div><div><span>最近心跳</span><b>未接入</b></div><div><span>最近抓拍</span><b>未接入</b></div></div></div>
+        <div class="device-card"><div class="device-title"><strong>车顶工业相机</strong><span class="status-dot unavailable">未接入</span></div><div class="device-meta"><div><span>所属链路</span><b>矿车载运监测</b></div><div><span>通信状态</span><b>未接入</b></div><div><span>最近心跳</span><b>未接入</b></div><div><span>最近抓拍</span><b>未接入</b></div></div></div>
+      </div></div><div class="page-footer"><span>设备心跳与采集诊断尚未接入，当前不显示模拟状态</span><span>设备异常应分别标识离线、无数据、数据超时</span></div></div>
+    </section>
+<section class="page" id="page-config">
+      <h1>配置管理</h1><p class="page-intro">首版提供查询展示，设备参数读取和下发尚未接入。</p>
+      <div class="section-card"><div class="section-head"><h2>雷达参数</h2><span class="muted">仅管理员可修改</span></div><div class="section-body"><div class="toolbar"><label for="config-device">选择设备</label><select id="config-device" style="width:190px"><option>矿车扫描雷达</option><option>辅助雷达</option></select><span class="push"></span><button class="button" data-demo="读取设备配置" type="button">读取当前配置</button></div><div class="field-grid" style="margin-top:18px"><label>扫描频率（Hz）<input placeholder="读取设备后显示" inputmode="decimal"></label><label>扫描起始角（°）<input placeholder="读取设备后显示" inputmode="decimal"></label><label>扫描终止角（°）<input placeholder="读取设备后显示" inputmode="decimal"></label><label>角分辨率（°）<input placeholder="读取设备后显示" inputmode="decimal"></label><label>数据超时阈值（s）<input placeholder="读取配置后显示" inputmode="decimal"></label><label>配置版本<input placeholder="读取设备后显示" readonly></label></div><div class="section-actions"><button class="button" data-demo="参数校验" type="button">校验参数</button><button class="button primary" data-demo="应用雷达配置" type="button">应用到设备</button></div></div><div class="page-footer"><span>正式下发前需校验型号支持范围、保留旧配置并记录操作人及时间</span></div></div>
+      <div class="section-card"><div class="section-head"><h2>告警阈值</h2></div><div class="section-body"><div class="field-grid"><label>偏载阈值（mm）<input placeholder="以现场标定值为准" inputmode="decimal"></label><label>超斗廓阈值（mm）<input placeholder="以现场标定值为准" inputmode="decimal"></label><label>待复核质量阈值<input placeholder="以算法配置为准"></label></div><div class="section-actions"><button class="button primary" data-demo="保存告警阈值" type="button">保存阈值</button></div></div></div>
+    </section>
+<section class="page" id="page-users">
+      <h1>用户管理</h1><p class="page-intro">已建立管理员与查询账号；用户增删、复核和配置修改尚未接入。</p>
+      <div class="section-card"><div class="section-head"><h2>用户列表</h2><button class="button primary" data-demo="新增用户" type="button">新增用户</button></div><table class="new-table"><thead><tr><th>账号</th><th>角色</th><th>状态</th><th>最近登录</th><th>操作</th></tr></thead><tbody><tr><td>admin</td><td>管理员</td><td><span class="status-dot">启用</span></td><td>未记录</td><td><button class="view" data-demo="编辑用户" type="button">编辑</button></td></tr><tr><td>viewer</td><td>查看员</td><td><span class="status-dot">启用</span></td><td>未记录</td><td><button class="view" data-demo="编辑用户" type="button">编辑</button></td></tr></tbody></table></div>
+      <div class="section-card"><div class="section-head"><h2>角色权限</h2></div><table class="new-table"><thead><tr><th>角色</th><th>记录查询</th><th>报表导出</th><th>报警复核</th><th>设备配置</th><th>用户管理</th></tr></thead><tbody><tr><td>管理员</td><td class="perm">允许</td><td class="perm">允许</td><td class="no-perm">未接入</td><td class="no-perm">未接入</td><td class="no-perm">未接入</td></tr><tr><td>查看员</td><td class="perm">允许</td><td class="perm">允许</td><td class="no-perm">未接入</td><td class="no-perm">未接入</td><td class="no-perm">未接入</td></tr></tbody></table><div class="page-footer"><span>当前两个固定账号均可查询和导出；其他权限尚未接入</span></div></div>
+    </section>
+<section class="page" id="page-email">
+      <h1>邮箱管理</h1><p class="page-intro">管理报警通知和周期报表的收件人、规则与发送记录。</p>
+      <div class="section-card"><div class="section-head"><h2>发件与收件配置</h2><span class="muted">仅管理员可修改</span></div><div class="section-body"><div class="field-grid"><label>发件账号<input value="邮件服务尚未接入" readonly></label><label>报警通知收件组<input placeholder="请输入邮箱组或收件人"></label><label>报表收件组<input placeholder="请输入邮箱组或收件人"></label></div><div class="section-actions"><button class="button" data-demo="测试邮件" type="button">发送测试邮件</button><button class="button primary" data-demo="保存邮箱配置" type="button">保存配置</button></div></div></div>
+      <div class="section-card"><div class="section-head"><h2>通知规则</h2></div><div class="rule-row"><span>报警通知</span><input type="checkbox" checked aria-label="报警通知启用"><small>新报警记录生成后通知报警收件组</small></div><div class="rule-row"><span>待复核提醒</span><input type="checkbox" aria-label="待复核提醒启用"><small>待复核车辆汇总提醒，避免逐车重复邮件</small></div><div class="rule-row"><span>日报／周报／月报</span><input type="checkbox" aria-label="周期报表启用"><small>按设定周期发送已入库测量记录的统计报表</small></div></div>
+      <div class="section-card"><div class="section-head"><h2>发送记录</h2></div><table class="new-table"><thead><tr><th>时间</th><th>类型</th><th>收件组</th><th>状态</th><th>关联记录</th></tr></thead><tbody><tr><td colspan="5" style="text-align:center;height:80px;color:#8697a6">邮件服务尚未接入</td></tr></tbody></table><div class="page-footer"><span>正式页面展示失败原因和重试结果；邮箱密码不在网页明文显示</span></div></div>
+    </section>
+</main>
+  </div>
+  
+
+  
+
+
+  <script src="/app.js" defer></script>
+
+</body>
+</html>

@@ -1,0 +1,3 @@
+﻿# Preserve the original supplied HTML bytes, including line endings.
+reference/design-v4.html -text
+*.png binary

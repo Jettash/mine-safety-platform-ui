@@ -1,0 +1,11 @@
+.tools/
+.verification/
+**/bin/
+**/obj/
+**/private/
+package/
+*.user
+**/appsettings.Local.json
+*.log
+
+.backups/

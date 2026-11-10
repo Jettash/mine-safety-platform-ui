@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="src/MineSafety.Web/MineSafety.Web.csproj" />
+  <Project Path="tests/MineSafety.Web.Tests/MineSafety.Web.Tests.csproj" />
+</Solution>
